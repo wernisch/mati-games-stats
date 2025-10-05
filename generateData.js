@@ -71,15 +71,16 @@ async function fetchWithRetry(url, init = {}) {
   throw lastErr || new Error(`Failed to fetch ${url}`);
 }
 
-async function fetchGamesBatch(ids) {
-  const url = wrap(`https://games.roblox.com/v1/games?universeIds=${ids.join(",")}`);
-  const res = await fetchWithRetry(url);
-  if (!res.ok) throw new Error(`games ${res.status}`);
-  const data = await res.json();
-  const map = new Map();
-  for (const g of data?.data || []) map.set(g.id, g);
-  return map;
-}
+ async function fetchGamesBatch(ids) {
+   const url = wrap(`https://games.roblox.com/v1/games?universeIds=${ids.join(",")}`);
+   const res = await fetchWithRetry(url);
+   if (!res.ok) throw new Error(`games ${res.status}`);
+   const data = await res.json();
+   const map = new Map();
+   for (const g of data?.data || []) map.set(g.id, g);
+   return map;
+ }
+
 
 async function fetchVotesBatch(ids) {
   const url = wrap(`https://games.roblox.com/v1/games/votes?universeIds=${ids.join(",")}`);
@@ -132,7 +133,10 @@ async function fetchIconsBatch(ids) {
           playing: game.playing || 0,
           visits: game.visits || 0,
           likeRatio: votesMap.get(id) ?? 0,
-          icon: iconsMap.get(id) ?? ""
+          icon: iconsMap.get(id) ?? "",
+          created: game.created ?? null,
+          updated: game.updated ?? null,
+          createdTs: game.created ? Date.parse(game.created) : null
         });
       }
       await wait(500);
