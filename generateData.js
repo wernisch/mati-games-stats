@@ -20,7 +20,7 @@ const gameIds = [
   8283618573, 8099904322, 9323921130,
   9294279969, 8683739287, 
 
-    8751472252, 8716119014, 8204633083, 9139547461
+    8751472252, 8716119014, 8204633083
 ];
 
 const proxyUrl = "https://workers-playground-white-credit-775c.bloxyhdd.workers.dev/?url=";
