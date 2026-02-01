@@ -30,7 +30,7 @@ const gameIds = [
 
 const proxyUrl = "https://workers-playground-white-credit-775c.bloxyhdd.workers.dev/?url=";
 
-const BATCH_SIZE = 75;
+const BATCH_SIZE = 50;
 const REQUEST_TIMEOUT_MS = 20000;
 const MAX_ATTEMPTS = 4;
 
