@@ -2,35 +2,64 @@ import fs from "fs";
 import fetch from "node-fetch";
 
 const gameIds = [
-  8649112027, 8641794993, 8617745696,
-  8470216398, 8120277194, 8030001602,
-  6431757712, 7016268111, 6789766645,
-  6614175388, 6528524000, 6463581673,
-  7096838238, 7166097502, 7517851351,
-  7626153268, 7072328729, 6743843913,
-  7334543566, 6829990681, 7263505269,
-  7401898945, 7309264740, 7456466538,
-  3071634329, 4800580998, 7288212525,
-  2505069317, 5049176019, 2946951335,
-  7424382390, 7168683817, 7349366409,
-  8154106881, 7923536197, 8091666772,
-  8631229462, 8385096583, 8975568157,
-
-  9237378322, 6903750207, 7150443063,
-  8283618573, 8099904322, 9323921130,
-  9294279969, 
-
-  8751472252, 8716119014, 8204633083,
-
-  9417988934,
-  9486176869,
-  9369562154,
-
-  9139547461,
-
-  9610663661, 9693639503, 8923556282,
-
-  7847641787, 7138124890, 8371948275
+  8649112027, // Break Bones Tower
+  8641794993, // Kids vs Parents Tower
+  8617745696, // Draw Troll Tower
+  8470216398, // [🎃] Protect The House From Brainrots
+  8120277194, // [UPD]Squid Game Roleplay Tower
+  8030001602, // Superhero Jump Clicker 🦸🚀
+  6431757712, // Find the Ducks 🐤
+  7016268111, // Find the Ducks 2 🐤
+  6789766645, // Find the Doges 🐶
+  6614175388, // Find the Monkeys 🐵
+  6528524000, // Find the Frogs 🐸
+  6463581673, // Find the Teddy Bears 🧸
+  7096838238, // Evade Protocol | FPS
+  7166097502, // [UPD] Parkour Rush
+  7517851351, // Midnight Sprunki [HORROR]
+  7626153268, // 🏁 Parkour Obby [W7]
+  7072328729, // Wait in Line to Become Frontman 🦑
+  6743843913, // 2 Player Duck Tycoon
+  7334543566, // Grow Your Duck! 🐤
+  6829990681, // Planets Merge Tycoon
+  7263505269, // Find the Dinos 🦕
+  7401898945, // Midnight Stalker [HORROR]
+  7309264740, // Midnight Groceries [HORROR]
+  7456466538, // Midnight Easter [HORROR]
+  4800580998, // Hell Battlegrounds
+  7288212525, // Emoji Murder
+  2505069317, // Gold Mining Tycoon
+  5049176019, // Slingshot Obby [2 Player Obby]
+  2946951335, // Squid Game [S3]
+  7424382390, // ??? (7424382390)
+  7168683817, // [UPD] Crazy Shooter 🔫
+  7349366409, // Blobfish Evolution
+  8154106881, // Feed Your Meme
+  7923536197, // Brainrot Stairs
+  8091666772, // Build a Capybara Army 🍊
+  8631229462, // Find the Ducks 3 🐤
+  8385096583, // Swimming Brainrots 🏊
+  8975568157, // Start your Business!
+  9237378322, // Real or Cake? 🍰
+  6903750207, // Santa Ride [2 Player Obby]
+  7150443063, // 🏀 Hoop Universe Basketball
+  8283618573, // Catch Critters [🐞]
+  8099904322, // Ball Simulator [😡 UPD]
+  9323921130, // Own a Zoo!
+  9294279969, // Own a Mall!
+  8751472252, // Skateboard Troll Tower 🛹
+  8716119014, // Find the Fish [120]
+  8204633083, // climb the grand canyon
+  9417988934, // Obby But You're a Duckling  🐤
+  9486176869, // Hockey Battles 🏒
+  9369562154, // Spin for Items!
+  9610663661, // Break Lucky Blocks For Soccer Cards
+  9693639503, // SNIPER SPLEEF
+  8923556282, // ⚓ Build a Battleship
+  7847641787, // [RUBBER] Project: Basketball
+  7138124890, // [HUGO] Project: Blue Lock
+  8371948275, // 2 Player Anime Battle Tycoon
+  9062062333, // Build a Troll Tower
 ];
 
 const proxyUrl = "https://brejndead.net/stats-api/robloxapi.php?url=";
