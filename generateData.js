@@ -55,7 +55,6 @@ const gameIds = [
   9369562154, // Spin for Items!
   9610663661, // Break Lucky Blocks For Soccer Cards
   9693639503, // SNIPER SPLEEF
-  8923556282, // ⚓ Build a Battleship
   7847641787, // [RUBBER] Project: Basketball
   7138124890, // [HUGO] Project: Blue Lock
   8371948275, // 2 Player Anime Battle Tycoon
