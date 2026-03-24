@@ -61,7 +61,7 @@ const gameIds = [
   9062062333, // Build a Troll Tower
 ];
 
-const proxyUrl = "https://brejndead.net/stats-api/robloxapi.php?url=";
+const proxyUrl = "https://vaulted.gg/stats-api/robloxapi.php?url=";
 
 const BATCH_SIZE = 50;
 const REQUEST_TIMEOUT_MS = 20000;
