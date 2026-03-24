@@ -62,25 +62,26 @@ const gameIds = [
 ];
 
 const proxyUrl = "https://vaulted.gg/stats-api/robloxapi.php?url=";
+const OutputPath = "public/games.json";
+const BatchSize = 50;
+const RequestTimeoutMs = 20000;
+const MaxAttempts = 4;
+const MinGamesThreshold = Math.floor(GameIds.length * 0.5);
 
-const BATCH_SIZE = 50;
-const REQUEST_TIMEOUT_MS = 20000;
-const MAX_ATTEMPTS = 4;
+const Wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const wait = (ms) => new Promise(r => setTimeout(r, ms));
-
-function chunk(arr, size) {
-  const out = [];
-  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-  return out;
+function Chunk(arr, size) {
+  const Out = [];
+  for (let i = 0; i < arr.length; i += size) Out.push(arr.slice(i, i + size));
+  return Out;
 }
 
-function backoffMs(attempt) {
-  const base = Math.min(4000, 250 * Math.pow(2, attempt - 1));
-  return base / 2 + Math.random() * base / 2;
+function BackoffMs(attempt) {
+  const Base = Math.min(4000, 250 * Math.pow(2, attempt - 1));
+  return Base / 2 + (Math.random() * Base) / 2;
 }
 
-function parseRetryAfter(v) {
+function ParseRetryAfter(v) {
   if (!v) return null;
   const s = Number(v);
   if (!Number.isNaN(s)) return Math.max(0, s * 1000);
@@ -89,114 +90,151 @@ function parseRetryAfter(v) {
   return null;
 }
 
-function wrap(url) {
-  return proxyUrl ? proxyUrl + encodeURIComponent(url) : url;
+function Wrap(url) {
+  return ProxyUrl ? ProxyUrl + encodeURIComponent(url) : url;
 }
 
-async function fetchWithRetry(url, init = {}) {
-  let lastErr, res;
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+async function FetchWithRetry(url, init = {}) {
+  let LastErr, Res;
+  for (let Attempt = 1; Attempt <= MaxAttempts; Attempt++) {
     try {
-      const controller = new AbortController();
-      const t = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-      res = await fetch(url, { ...init, signal: controller.signal, headers: { ...(init.headers || {}), Origin: "null" } });
-      clearTimeout(t);
+      const Controller = new AbortController();
+      const Timer = setTimeout(() => Controller.abort(), RequestTimeoutMs);
+      Res = await fetch(url, {
+        ...init,
+        signal: Controller.signal,
+        headers: { ...(init.headers || {}), Origin: "null" },
+      });
+      clearTimeout(Timer);
 
-      if (res.status === 429 && attempt < MAX_ATTEMPTS) {
-        const ra = parseRetryAfter(res.headers.get("Retry-After"));
-        await wait(ra ?? backoffMs(attempt));
+      if (Res.status === 429 && Attempt < MaxAttempts) {
+        const Ra = ParseRetryAfter(Res.headers.get("Retry-After"));
+        await Wait(Ra ?? BackoffMs(Attempt));
         continue;
       }
-      if (res.status >= 500 && res.status < 600 && attempt < MAX_ATTEMPTS) {
-        await wait(backoffMs(attempt));
+      if (Res.status >= 500 && Res.status < 600 && Attempt < MaxAttempts) {
+        await Wait(BackoffMs(Attempt));
         continue;
       }
-      return res;
+      return Res;
     } catch (e) {
-      lastErr = e;
-      if (attempt === MAX_ATTEMPTS) break;
-      await wait(backoffMs(attempt));
+      LastErr = e;
+      if (Attempt === MaxAttempts) break;
+      await Wait(BackoffMs(Attempt));
     }
   }
-  throw lastErr || new Error(`Failed to fetch ${url}`);
+  throw LastErr || new Error(`Failed to fetch ${url}`);
 }
 
- async function fetchGamesBatch(ids) {
-   const url = wrap(`https://games.roblox.com/v1/games?universeIds=${ids.join(",")}`);
-   const res = await fetchWithRetry(url);
-   if (!res.ok) throw new Error(`games ${res.status}`);
-   const data = await res.json();
-   const map = new Map();
-   for (const g of data?.data || []) map.set(g.id, g);
-   return map;
- }
-
-
-async function fetchVotesBatch(ids) {
-  const url = wrap(`https://games.roblox.com/v1/games/votes?universeIds=${ids.join(",")}`);
-  const res = await fetchWithRetry(url);
-  if (!res.ok) throw new Error(`votes ${res.status}`);
-  const data = await res.json();
-  const map = new Map();
-  for (const v of data?.data || []) {
-    const total = (v.upVotes || 0) + (v.downVotes || 0);
-    const likeRatio = total > 0 ? Math.round((v.upVotes / total) * 100) : 0;
-    map.set(v.id, likeRatio);
-  }
-  return map;
+async function FetchGamesBatch(ids) {
+  const Url = Wrap(
+    `https://games.roblox.com/v1/games?universeIds=${ids.join(",")}`
+  );
+  const Res = await FetchWithRetry(Url);
+  if (!Res.ok) throw new Error(`games ${Res.status}`);
+  const Data = await Res.json();
+  const Map = new Map();
+  for (const g of Data?.data || []) Map.set(g.id, g);
+  return Map;
 }
 
-async function fetchIconsBatch(ids) {
-  const url = wrap(`https://thumbnails.roblox.com/v1/games/multiget/thumbnails?universeIds=${ids.join(",")}&size=768x432&format=Png&isCircular=false`);
-  const res = await fetchWithRetry(url);
-  if (!res.ok) throw new Error(`thumbs ${res.status}`);
-  const data = await res.json();
-  const map = new Map();
-  for (const row of data?.data || []) {
-    const uni = row.universeId ?? row.targetId;
-    const img = row?.thumbnails?.[0]?.imageUrl ?? null;
-    map.set(uni, img);
+async function FetchVotesBatch(ids) {
+  const Url = Wrap(
+    `https://games.roblox.com/v1/games/votes?universeIds=${ids.join(",")}`
+  );
+  const Res = await FetchWithRetry(Url);
+  if (!Res.ok) throw new Error(`votes ${Res.status}`);
+  const Data = await Res.json();
+  const VoteMap = new Map();
+  for (const v of Data?.data || []) {
+    const Total = (v.upVotes || 0) + (v.downVotes || 0);
+    const LikeRatio = Total > 0 ? Math.round((v.upVotes / Total) * 100) : 0;
+    VoteMap.set(v.id, LikeRatio);
   }
-  return map;
+  return VoteMap;
+}
+
+async function FetchIconsBatch(ids) {
+  const Url = Wrap(
+    `https://thumbnails.roblox.com/v1/games/multiget/thumbnails?universeIds=${ids.join(",")}&size=768x432&format=Png&isCircular=false`
+  );
+  const Res = await FetchWithRetry(Url);
+  if (!Res.ok) throw new Error(`thumbs ${Res.status}`);
+  const Data = await Res.json();
+  const IconMap = new Map();
+  for (const Row of Data?.data || []) {
+    const Uni = Row.universeId ?? Row.targetId;
+    const Img = Row?.thumbnails?.[0]?.imageUrl ?? null;
+    IconMap.set(Uni, Img);
+  }
+  return IconMap;
+}
+
+function LoadPreviousData() {
+  try {
+    if (!fs.existsSync(OutputPath)) return null;
+    const Raw = fs.readFileSync(OutputPath, "utf-8");
+    const Parsed = JSON.parse(Raw);
+    if (Array.isArray(Parsed?.games) && Parsed.games.length > 0) return Parsed;
+  } catch {
+    return null;
+  }
+  return null;
 }
 
 (async () => {
-  const allGames = [];
-  const batches = chunk(gameIds, BATCH_SIZE);
+  const AllGames = [];
+  const Batches = Chunk(GameIds, BatchSize);
 
-  for (const ids of batches) {
+  for (const Ids of Batches) {
     try {
-      const [gamesMap, votesMap, iconsMap] = await Promise.all([
-        fetchGamesBatch(ids),
-        fetchVotesBatch(ids),
-        fetchIconsBatch(ids)
+      const [GamesMap, VotesMap, IconsMap] = await Promise.all([
+        FetchGamesBatch(Ids),
+        FetchVotesBatch(Ids),
+        FetchIconsBatch(Ids),
       ]);
 
-      for (const id of ids) {
-        const game = gamesMap.get(id);
-        if (!game) continue;
+      for (const Id of Ids) {
+        const Game = GamesMap.get(Id);
+        if (!Game) continue;
 
-        allGames.push({
-          id: game.id,
-          rootPlaceId: game.rootPlaceId,
-          name: game.name,
-          playing: game.playing || 0,
-          visits: game.visits || 0,
-          likeRatio: votesMap.get(id) ?? 0,
-          icon: iconsMap.get(id) ?? "",
-          created: game.created ?? null,
-          updated: game.updated ?? null,
-          createdTs: game.created ? Date.parse(game.created) : null
+        AllGames.push({
+          id: Game.id,
+          rootPlaceId: Game.rootPlaceId,
+          name: Game.name,
+          playing: Game.playing || 0,
+          visits: Game.visits || 0,
+          likeRatio: VotesMap.get(Id) ?? 0,
+          icon: IconsMap.get(Id) ?? "",
+          created: Game.created ?? null,
+          updated: Game.updated ?? null,
+          createdTs: Game.created ? Date.parse(Game.created) : null,
         });
       }
-      await wait(500);
+      await Wait(500);
     } catch (err) {
-      console.error(`Batch failed for ids [${ids.join(",")}]:`, err);
+      console.error(`Batch failed for ids [${Ids.join(",")}]:`, err);
     }
   }
 
-  allGames.sort((a, b) => b.playing - a.playing);
+  AllGames.sort((a, b) => b.playing - a.playing);
 
-  fs.mkdirSync("public", { recursive: true });
-  fs.writeFileSync("public/games.json", JSON.stringify({ games: allGames }, null, 2));
+  const NewData = { games: AllGames };
+  const PreviousData = LoadPreviousData();
+
+  if (AllGames.length >= MinGamesThreshold) {
+    fs.mkdirSync("public", { recursive: true });
+    fs.writeFileSync(OutputPath, JSON.stringify(NewData, null, 2));
+    console.log(`Wrote ${AllGames.length} games to ${OutputPath}`);
+  } else if (PreviousData) {
+    console.warn(
+      `Only fetched ${AllGames.length}/${GameIds.length} games (below threshold of ${MinGamesThreshold}). Keeping previous data with ${PreviousData.games.length} games.`
+    );
+  } else {
+    fs.mkdirSync("public", { recursive: true });
+    fs.writeFileSync(OutputPath, JSON.stringify(NewData, null, 2));
+    console.warn(
+      `Only fetched ${AllGames.length} games and no previous data exists. Wrote partial data.`
+    );
+  }
 })();
